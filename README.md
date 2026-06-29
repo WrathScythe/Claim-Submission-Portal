@@ -54,13 +54,6 @@ The app is designed to remain simple while including the main features needed fo
    http://localhost:5000
    ```
 
-### Environment Variables
-
-| Variable       | Description                  | Default                                              |
-|----------------|------------------------------|------------------------------------------------------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://claimuser:claimpass@db:5432/claimdb`   |
-| `SECRET_KEY`   | Flask secret key             | Must be set manually                                 |
-
 ---
 
 ## Solutions
