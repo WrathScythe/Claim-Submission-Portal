@@ -81,15 +81,6 @@ When the OIC staff member navigates to **Review Claims** and opens the malicious
 
 ---
 
-## Impact
-
-- **Session hijacking** — steal the OIC staff member's session cookie and impersonate them.
-- **Privilege escalation** — perform OIC-level actions (approve/reject claims) from a normal staff account.
-- **Data exfiltration** — read sensitive claim data visible only to OIC staff.
-- **Phishing** — inject fake login forms or UI elements to capture credentials.
-
----
-
 ## Root Cause
 
 1. No server-side input sanitisation when the claim is submitted (`app.py` stores raw HTML).

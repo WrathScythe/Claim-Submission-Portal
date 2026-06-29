@@ -99,14 +99,6 @@ def approve_claim(claim_id):
 
 ---
 
-## Impact
-
-- **Authorisation bypass** — a normal staff user can approve their own claims without OIC oversight.
-- **Fraud risk** — claims that should be reviewed and potentially rejected can be self-approved.
-- **Audit trail corruption** — `reviewed_by` is set to the staff user's own ID, creating a misleading audit record.
-
----
-
 ## Root Cause
 
 The server relies on client-side UI controls (button visibility) rather than enforcing a server-side role check on the approval endpoint. The `@login_required` decorator only confirms authentication, not authorisation.

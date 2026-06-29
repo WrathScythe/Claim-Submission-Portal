@@ -99,14 +99,6 @@ The following variables are passed to `render_template_string` and can be used i
 
 ---
 
-## Impact
-
-- **Remote Code Execution (RCE)** — execute arbitrary OS commands on the server as the application user (or root if running as root in Docker).
-- **Full server compromise** — read/write files, exfiltrate database credentials, pivot to other services.
-- **Information disclosure** — leak Flask config, environment variables, and database connection strings.
-
----
-
 ## Root Cause
 
 1. User-supplied template content is stored without sanitisation or sandboxing.
