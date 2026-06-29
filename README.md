@@ -40,7 +40,7 @@ The app is designed to remain simple while including the main features needed fo
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/WrathScythe/Claim-Submission-Portal.git
    cd "Claim Submission Portal"
    ```
 
