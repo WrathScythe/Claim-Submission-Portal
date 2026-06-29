@@ -45,16 +45,6 @@
                 <td>{{ claim.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                 <td>
                     <a href="{{ url_for('view_claim', claim_id=claim.id) }}" class="btn btn-secondary" style="padding:0.3rem 0.7rem; font-size:0.82rem;">View</a>
-                    {% if claim.status == 'pending' %}
-                    <!-- VULNERABILITY: Broken Approval Workflow
-                         Approval button shown to staff via hidden form.
-                         Staff can tamper with request to approve own claims. -->
-                    <form method="POST" action="{{ url_for('approve_claim', claim_id=claim.id) }}" class="inline-form" style="display:inline;">
-                        <input type="hidden" name="action" value="approve">
-                        <input type="hidden" name="review_notes" value="Self-approved">
-                        <button type="submit" class="btn btn-success" style="padding:0.3rem 0.7rem; font-size:0.82rem;">Approve</button>
-                    </form>
-                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

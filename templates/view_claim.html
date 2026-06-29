@@ -55,18 +55,6 @@
 
         <div style="margin-top:1.5rem;">
             <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-
-            {% if claim.status == 'pending' %}
-            <!-- VULNERABILITY: Broken Approval Workflow
-                 This approval form is accessible to the claim submitter (staff).
-                 The server does not enforce OIC-only role check on the approve endpoint.
-                 A staff user can approve their own claim. -->
-            <form method="POST" action="{{ url_for('approve_claim', claim_id=claim.id) }}" style="display:inline;">
-                <input type="hidden" name="action" value="approve">
-                <input type="hidden" name="review_notes" value="Self-approved by staff">
-                <button type="submit" class="btn btn-success">Approve Own Claim</button>
-            </form>
-            {% endif %}
         </div>
     </div>
 </div>
