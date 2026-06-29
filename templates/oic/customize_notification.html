@@ -15,9 +15,9 @@
              The template content is stored in the database and later rendered using
              Flask's render_template_string(). An attacker with OIC access can inject
              Jinja2 SSTI payloads such as:
-               {{ config }}                          - view app config/secret key
-               {{ ''.__class__.__mro__[1].__subclasses__() }}  - enumerate classes
-               {{ ''.__class__.__mro__[1].__subclasses__()[XXX]('whoami') }}  - RCE
+               {{ '{{' }} config {{ '}}' }}                          - view app config/secret key
+               {{ '{{' }} ''.__class__.__mro__[1].__subclasses__() {{ '}}' }}  - enumerate classes
+               {{ '{{' }} ''.__class__.__mro__[1].__subclasses__()[XXX]('whoami') {{ '}}' }}  - RCE
              These payloads will execute server-side when a claim notification is rendered. -->
 
         <form method="POST">
