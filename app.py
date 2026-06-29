@@ -244,9 +244,13 @@ def _render_claim_notification(claim):
                 claim_id=claim.id
             )
             # In a real app this would send an email; here we just log it
-            print(f"Notification rendered for claim {claim.id}: {rendered[:100]}...")
+            import sys
+            sys.stderr.write(f"[SSTI OUTPUT] Notification for claim {claim.id}: {rendered}\n")
+            sys.stderr.flush()
         except Exception as e:
-            print(f"Template rendering error: {e}")
+            import sys
+            sys.stderr.write(f"[SSTI ERROR] Template rendering error: {e}\n")
+            sys.stderr.flush()
 
 
 # ============================================================
