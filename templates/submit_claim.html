@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Submit Claim - Claim Portal{% endblock %}
+{% block content %}
+<div style="max-width: 700px; margin: 0 auto;">
+    <div class="card">
+        <h2>Submit a New Claim</h2>
+        <form method="POST">
+            <div class="form-group">
+                <label for="claim_type_id">Claim Type</label>
+                <select id="claim_type_id" name="claim_type_id" required>
+                    <option value="">-- Select Claim Type --</option>
+                    {% for ct in claim_types %}
+                    <option value="{{ ct.id }}">{{ ct.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="title">Claim Title</label>
+                <input type="text" id="title" name="title" required placeholder="Brief title for your claim">
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" required placeholder="Provide details about your claim..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="amount">Amount ($)</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="0" required placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label for="additional_details">Additional Details (optional)</label>
+                <textarea id="additional_details" name="additional_details" placeholder="Any additional information..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Claim</button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

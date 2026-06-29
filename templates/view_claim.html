@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Claim #{{ claim.id }} - Claim Portal{% endblock %}
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <h2>Claim #{{ claim.id }}</h2>
+            <span class="badge badge-{{ claim.status }}" style="font-size:1rem;">{{ claim.status|upper }}</span>
+        </div>
+
+        <div class="review-box">
+            <div class="detail-row">
+                <div class="detail-label">Claim Type:</div>
+                <div class="detail-value">{{ claim.claim_type.name if claim.claim_type else 'N/A' }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Title:</div>
+                <div class="detail-value">{{ claim.title }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Amount:</div>
+                <div class="detail-value">${{ "%.2f"|format(claim.amount) }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Description:</div>
+                <!-- NOTE: Using normal escaping here for staff view -->
+                <div class="detail-value">{{ claim.description }}</div>
+            </div>
+            {% if claim.additional_details %}
+            <div class="detail-row">
+                <div class="detail-label">Additional Details:</div>
+                <!-- NOTE: Using normal escaping here for staff view -->
+                <div class="detail-value">{{ claim.additional_details }}</div>
+            </div>
+            {% endif %}
+            <div class="detail-row">
+                <div class="detail-label">Submitted:</div>
+                <div class="detail-value">{{ claim.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Submitter:</div>
+                <div class="detail-value">{{ claim.submitter.username }}</div>
+            </div>
+            {% if claim.reviewer %}
+            <div class="detail-row">
+                <div class="detail-label">Reviewed By:</div>
+                <div class="detail-value">{{ claim.reviewer.username }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Review Notes:</div>
+                <div class="detail-value">{{ claim.review_notes }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="margin-top:1.5rem;">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+
+            {% if claim.status == 'pending' %}
+            <!-- VULNERABILITY: Broken Approval Workflow
+                 This approval form is accessible to the claim submitter (staff).
+                 The server does not enforce OIC-only role check on the approve endpoint.
+                 A staff user can approve their own claim. -->
+            <form method="POST" action="{{ url_for('approve_claim', claim_id=claim.id) }}" style="display:inline;">
+                <input type="hidden" name="action" value="approve">
+                <input type="hidden" name="review_notes" value="Self-approved by staff">
+                <button type="submit" class="btn btn-success">Approve Own Claim</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

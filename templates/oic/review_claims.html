@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Review All Claims - Claim Portal{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>All Submitted Claims</h2>
+    {% if claims %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Submitter</th>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for claim in claims %}
+            <tr>
+                <td>#{{ claim.id }}</td>
+                <td>{{ claim.submitter.username }}</td>
+                <td>{{ claim.claim_type.name if claim.claim_type else 'N/A' }}</td>
+                <td>{{ claim.title }}</td>
+                <td>${{ "%.2f"|format(claim.amount) }}</td>
+                <td><span class="badge badge-{{ claim.status }}">{{ claim.status|upper }}</span></td>
+                <td>{{ claim.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <a href="{{ url_for('review_claim', claim_id=claim.id) }}" class="btn btn-primary" style="padding:0.3rem 0.7rem; font-size:0.82rem;">Review</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:#7f8c8d; text-align:center; padding:2rem;">No claims submitted yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

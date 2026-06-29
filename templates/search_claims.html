@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Search Claims - Claim Portal{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>Search Claims</h2>
+    <!-- VULNERABILITY: SQL Injection
+         The search input is directly concatenated into the SQL query
+         without parameterisation or sanitisation.
+         Example payload: ' UNION SELECT id, username, email, password_hash, role, null, null, null, null, null, null, null, null FROM users -- -->
+    <form method="POST">
+        <div style="display:flex; gap:0.8rem; align-items:flex-end;">
+            <div class="form-group" style="flex:1; margin:0;">
+                <label for="search">Search by title or description</label>
+                <input type="text" id="search" name="search" value="{{ search_query }}" placeholder="Enter search term...">
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Results {% if search_query %} for "{{ search_query }}"{% endif %}</h2>
+    {% if results %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                {% if current_user.is_oic() %}<th>Submitter</th>{% endif %}
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in results %}
+            <tr>
+                {% if is_raw_sql %}
+                {# Raw SQL result tuple from SQL injection query #}
+                <td>#{{ row[0] }}</td>
+                {% if current_user.is_oic() %}<td>-</td>{% endif %}
+                <td>{{ row[3] if row|length > 3 else '' }}</td>
+                <td>{{ row[5] if row|length > 5 else '' }}</td>
+                <td>{{ row[6] if row|length > 6 else '' }}</td>
+                <td>{{ row[7] if row|length > 7 else '' }}</td>
+                <td>-</td>
+                {% else %}
+                <td>#{{ row.id }}</td>
+                {% if current_user.is_oic() %}
+                <td>{{ row.submitter.username if row.submitter else 'N/A' }}</td>
+                {% endif %}
+                <td>{{ row.title }}</td>
+                <td>${{ "%.2f"|format(row.amount) }}</td>
+                <td><span class="badge badge-{{ row.status }}">{{ row.status|upper }}</span></td>
+                <td>{{ row.created_at.strftime('%Y-%m-%d %H:%M') if row.created_at else 'N/A' }}</td>
+                <td>
+                    <a href="{{ url_for('view_claim', claim_id=row.id) }}" class="btn btn-secondary" style="padding:0.3rem 0.7rem; font-size:0.82rem;">View</a>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:#7f8c8d; text-align:center; padding:2rem;">No results found.</p>
+    {% endif %}
+</div>
+{% endblock %}

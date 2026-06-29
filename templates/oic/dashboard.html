@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}OIC Dashboard - Claim Portal{% endblock %}
+{% block content %}
+<h1 style="margin-bottom:1.5rem; color:#2c3e50;">OIC Administration Dashboard</h1>
+
+<div class="grid">
+    <div class="card stat-card">
+        <div class="number">{{ pending_claims|length }}</div>
+        <div class="label">Pending Claims</div>
+    </div>
+    <div class="card stat-card">
+        <div class="number">{{ all_claims|length }}</div>
+        <div class="label">Total Claims (last 50)</div>
+    </div>
+    <div class="card stat-card">
+        <div class="number">{{ claim_types|length }}</div>
+        <div class="label">Claim Types</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Pending Claims Requiring Review</h2>
+    {% if pending_claims %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Submitter</th>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Submitted</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for claim in pending_claims %}
+            <tr>
+                <td>#{{ claim.id }}</td>
+                <td>{{ claim.submitter.username }}</td>
+                <td>{{ claim.claim_type.name if claim.claim_type else 'N/A' }}</td>
+                <td>{{ claim.title }}</td>
+                <td>${{ "%.2f"|format(claim.amount) }}</td>
+                <td>{{ claim.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <a href="{{ url_for('review_claim', claim_id=claim.id) }}" class="btn btn-primary" style="padding:0.3rem 0.7rem; font-size:0.82rem;">Review</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:#7f8c8d; text-align:center; padding:2rem;">No pending claims to review.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Recent Claims</h2>
+    {% if all_claims %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Submitter</th>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for claim in all_claims %}
+            <tr>
+                <td>#{{ claim.id }}</td>
+                <td>{{ claim.submitter.username }}</td>
+                <td>{{ claim.title }}</td>
+                <td>${{ "%.2f"|format(claim.amount) }}</td>
+                <td><span class="badge badge-{{ claim.status }}">{{ claim.status|upper }}</span></td>
+                <td>{{ claim.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <a href="{{ url_for('review_claim', claim_id=claim.id) }}" class="btn btn-secondary" style="padding:0.3rem 0.7rem; font-size:0.82rem;">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:#7f8c8d; text-align:center; padding:2rem;">No claims yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

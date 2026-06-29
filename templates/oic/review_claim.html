@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Review Claim #{{ claim.id }} - Claim Portal{% endblock %}
+{% block content %}
+<div style="max-width: 850px; margin: 0 auto;">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <h2>Review Claim #{{ claim.id }}</h2>
+            <span class="badge badge-{{ claim.status }}" style="font-size:1rem;">{{ claim.status|upper }}</span>
+        </div>
+
+        <div class="review-box">
+            <div class="detail-row">
+                <div class="detail-label">Submitter:</div>
+                <div class="detail-value">{{ claim.submitter.username }} ({{ claim.submitter.email }})</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Claim Type:</div>
+                <div class="detail-value">{{ claim.claim_type.name if claim.claim_type else 'N/A' }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Title:</div>
+                <div class="detail-value">{{ claim.title }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Amount:</div>
+                <div class="detail-value">${{ "%.2f"|format(claim.amount) }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Submitted:</div>
+                <div class="detail-value">{{ claim.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+            </div>
+            <div class="detail-row" style="align-items:flex-start;">
+                <div class="detail-label">Description:</div>
+                <!-- VULNERABILITY: Stored XSS
+                     The description is rendered with |safe filter, which does NOT escape HTML.
+                     If a staff user submitted a claim containing <script>alert('XSS')</script>
+                     or any other HTML/JS payload, it will execute here in the OIC reviewer's
+                     browser session, potentially hijacking their session or performing
+                     privileged actions. -->
+                <div class="detail-value">{{ claim.description|safe }}</div>
+            </div>
+            {% if claim.additional_details %}
+            <div class="detail-row" style="align-items:flex-start;">
+                <div class="detail-label">Additional Details:</div>
+                <!-- VULNERABILITY: Stored XSS (same as description) -->
+                <div class="detail-value">{{ claim.additional_details|safe }}</div>
+            </div>
+            {% endif %}
+            {% if claim.reviewer %}
+            <div class="detail-row">
+                <div class="detail-label">Reviewed By:</div>
+                <div class="detail-value">{{ claim.reviewer.username }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Review Notes:</div>
+                <div class="detail-value">{{ claim.review_notes }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if claim.status == 'pending' %}
+        <div style="margin-top:1.5rem; padding-top:1.5rem; border-top:2px solid #e9ecef;">
+            <h3 style="margin-bottom:1rem;">Take Action</h3>
+            <form method="POST" action="{{ url_for('approve_claim', claim_id=claim.id) }}">
+                <div class="form-group">
+                    <label for="review_notes">Review Notes</label>
+                    <textarea id="review_notes" name="review_notes" placeholder="Add notes about your decision..."></textarea>
+                </div>
+                <div style="display:flex; gap:1rem;">
+                    <input type="hidden" name="action" value="approve">
+                    <button type="submit" class="btn btn-success" style="flex:1;">Approve Claim</button>
+                </div>
+            </form>
+            <form method="POST" action="{{ url_for('approve_claim', claim_id=claim.id) }}" style="margin-top:0.8rem;">
+                <input type="hidden" name="action" value="reject">
+                <input type="hidden" name="review_notes" value="">
+                <button type="submit" class="btn btn-danger" style="width:100%;" onclick="this.form.elements['review_notes'].value=prompt('Reason for rejection:')||'';">Reject Claim</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <div style="margin-top:1.5rem;">
+            <a href="{{ url_for('review_claims') }}" class="btn btn-secondary">Back to All Claims</a>
+            <a href="{{ url_for('oic_dashboard') }}" class="btn btn-secondary">Back to OIC Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

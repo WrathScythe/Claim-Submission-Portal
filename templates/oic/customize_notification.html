@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Customise Notification Template - Claim Portal{% endblock %}
+{% block content %}
+<div style="max-width: 850px; margin: 0 auto;">
+    <div class="card">
+        <h2>Customise Claim Approval Notification Template</h2>
+        <p style="color:#555; margin-bottom:1.5rem;">
+            Edit the Jinja2 template used for claim approval/rejection notifications.
+            Available variables: <code>{{ claim_id }}</code>, <code>{{ claim_title }}</code>,
+            <code>{{ claim_amount }}</code>, <code>{{ claim_status }}</code>, <code>{{ submitter_name }}</code>,
+            <code>{{ claim_data }}</code>
+        </p>
+
+        <!-- VULNERABILITY: SSTI (Server-Side Template Injection)
+             The template content is stored in the database and later rendered using
+             Flask's render_template_string(). An attacker with OIC access can inject
+             Jinja2 SSTI payloads such as:
+               {{ config }}                          - view app config/secret key
+               {{ ''.__class__.__mro__[1].__subclasses__() }}  - enumerate classes
+               {{ ''.__class__.__mro__[1].__subclasses__()[XXX]('whoami') }}  - RCE
+             These payloads will execute server-side when a claim notification is rendered. -->
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="template_name">Template Name</label>
+                <input type="text" id="template_name" name="template_name"
+                       value="{{ template.name if template else 'Claim Approval Notification' }}">
+            </div>
+            <div class="form-group">
+                <label for="template_content">Template Content (Jinja2)</label>
+                <textarea id="template_content" name="template_content" rows="18"
+                          style="font-family: 'Courier New', monospace; font-size: 0.9rem; line-height:1.5;">{{ template.template_content if template else default_template }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Template</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Template Preview Helper</h3>
+        <p style="color:#555; font-size:0.88rem;">
+            The template will be rendered with the following context when a claim is approved or rejected:
+        </p>
+        <table>
+            <thead>
+                <tr><th>Variable</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>{{ claim_id }}</code></td><td>The claim record ID</td></tr>
+                <tr><td><code>{{ claim_title }}</code></td><td>Claim title</td></tr>
+                <tr><td><code>{{ claim_amount }}</code></td><td>Claim amount</td></tr>
+                <tr><td><code>{{ claim_status }}</code></td><td>approved / rejected</td></tr>
+                <tr><td><code>{{ submitter_name }}</code></td><td>Username of submitter</td></tr>
+                <tr><td><code>{{ claim_data }}</code></td><td>Full claim ORM object</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card" style="background:#fff3cd; border-left:4px solid #f39c12;">
+        <h3 style="color:#856404;">SSTI Vulnerability Notice</h3>
+        <p style="color:#856404; font-size:0.9rem;">
+            <strong>Warning:</strong> This template is rendered using <code>render_template_string()</code>.
+            Jinja2 expressions entered here will be evaluated server-side. Malicious payloads can lead to
+            Remote Code Execution (RCE). This is intentional for demonstration purposes.
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Manage Claim Types - Claim Portal{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>Create New Claim Type</h2>
+    <form method="POST">
+        <input type="hidden" name="action" value="create">
+        <div class="grid" style="gap:1rem;">
+            <div class="form-group">
+                <label for="name">Claim Type Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" id="description" name="description">
+            </div>
+            <div class="form-group">
+                <label for="required_fields">Required Fields (comma-separated)</label>
+                <input type="text" id="required_fields" name="required_fields" placeholder="e.g. receipt,date,vendor">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Claim Type</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Existing Claim Types</h2>
+    {% if claim_types %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Required Fields</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ct in claim_types %}
+            <tr>
+                <td>{{ ct.id }}</td>
+                <td><strong>{{ ct.name }}</strong></td>
+                <td>{{ ct.description or '-' }}</td>
+                <td>{{ ct.required_fields or '-' }}</td>
+                <td>
+                    {% if ct.is_active %}
+                        <span class="badge badge-approved">Active</span>
+                    {% else %}
+                        <span class="badge badge-rejected">Inactive</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="POST" class="inline-form" style="display:inline;">
+                        <input type="hidden" name="action" value="toggle">
+                        <input type="hidden" name="claim_type_id" value="{{ ct.id }}">
+                        <button type="submit" class="btn btn-warning" style="padding:0.3rem 0.7rem; font-size:0.82rem;">
+                            {{ 'Deactivate' if ct.is_active else 'Activate' }}
+                        </button>
+                    </form>
+                    <form method="POST" class="inline-form" style="display:inline; margin-left:0.3rem;">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="claim_type_id" value="{{ ct.id }}">
+                        <button type="submit" class="btn btn-danger" style="padding:0.3rem 0.7rem; font-size:0.82rem;" onclick="return confirm('Are you sure?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:#7f8c8d; text-align:center; padding:2rem;">No claim types defined yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
