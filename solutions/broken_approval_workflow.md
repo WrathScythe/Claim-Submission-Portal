@@ -1,7 +1,5 @@
 # Business Logic Flaw — Broken Approval Workflow
 
-**CWE:** [CWE-862](https://cwe.mitre.org/data/definitions/862.html) — Missing Authorisation
-
 ---
 
 ## Vulnerability Summary
@@ -76,7 +74,7 @@ fetch('/claim/3/approve', {
 
 ### Step 4 — Confirm the claim is approved
 
-Return to your staff dashboard (`/`) or view the claim directly (`/claim/3`). The claim status should now show **APPROVED**, and `reviewed_by` will be set to the staff user's own ID.
+Return to your staff dashboard (`/`) or view the claim directly (`/claim/(.)`). The claim status should now show **APPROVED**, and `reviewed_by` will be set to the staff user's own ID.
 
 ---
 
@@ -97,8 +95,3 @@ def approve_claim(claim_id):
     # No is_oic() check here
 ```
 
----
-
-## Root Cause
-
-The server relies on client-side UI controls (button visibility) rather than enforcing a server-side role check on the approval endpoint. The `@login_required` decorator only confirms authentication, not authorisation.

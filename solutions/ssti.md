@@ -1,7 +1,5 @@
 # RCE 1 — SSTI through Jinja Template
 
-**CWE:** [CWE-1336](https://cwe.mitre.org/data/definitions/1336.html) — Improper Neutralisation of Special Elements Used in a Template Engine
-
 ---
 
 ## Vulnerability Summary
@@ -97,9 +95,3 @@ The following variables are passed to `render_template_string` and can be used i
 | `submitter_name`  | Submitter's username string  |
 | `claim_id`        | Claim ID (integer)           |
 
----
-
-## Root Cause
-
-1. User-supplied template content is stored without sanitisation or sandboxing.
-2. `render_template_string()` evaluates Jinja2 expressions in the full Flask application context, giving access to `config`, `lipsum.__globals__`, `request`, and the entire Python object hierarchy.

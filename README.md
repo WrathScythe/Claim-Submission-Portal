@@ -1,17 +1,17 @@
 # Claim Submission Portal
 
-A simple Python web application built with Flask where staff can submit and track claims, and OIC (Officer in Charge) staff can manage claim types, review submissions, and approve or reject them.
+A simple Python web application where staff can submit and track claims, and OIC (Officer in Charge) staff can manage claim types, review submissions, and approve or reject them.
 
 ---
 
 ## Overview
 
-This application provides two levels of access:
+Functions for each role:
 
 - **Normal Staff** — Log in, submit claims by selecting a claim type and entering the required details, and search or track the status of their own submissions.
 - **OIC Staff** — Log in to create and manage claim types, review submitted claims, approve or reject them, and customise the claim approval notification template.
 
-The app is designed to remain simple while including the main features needed for claims submission and approval workflows.
+The app is simple while including the main features needed for claims submission and approval workflows.
 
 
 ## Features
@@ -58,16 +58,16 @@ The app is designed to remain simple while including the main features needed fo
 
 ## Solutions
 
-Detailed exploitation write-ups for each vulnerability can be found in the [`solutions/`](solutions/) folder:
+Exploitation write-ups for each vulnerability can be found in the [`solutions/`](solutions/) folder:
 
-| Vulnerability | File | CWE |
-|---------------|------|-----|
-| Stored XSS | [`solutions/stored_xss.md`](solutions/stored_xss.md) | CWE-79 |
-| SQL Injection | [`solutions/sql_injection.md`](solutions/sql_injection.md) | CWE-89 |
-| SSTI (Server-Side Template Injection) | [`solutions/ssti.md`](solutions/ssti.md) | CWE-1336 |
-| Broken Approval Workflow | [`solutions/broken_approval_workflow.md`](solutions/broken_approval_workflow.md) | CWE-862 |
+| Vulnerability | File |
+|---------------|------|
+| Stored XSS | [`solutions/stored_xss.md`](solutions/stored_xss.md) |
+| SQL Injection | [`solutions/sql_injection.md`](solutions/sql_injection.md) |
+| SSTI (Server-Side Template Injection) | [`solutions/ssti.md`](solutions/ssti.md) |
+| Broken Approval Workflow | [`solutions/broken_approval_workflow.md`](solutions/broken_approval_workflow.md) |
 
-### Default Credentials
+### User's Credentials
 
 | Role | Username | Password |
 |------|----------|----------|
@@ -76,6 +76,3 @@ Detailed exploitation write-ups for each vulnerability can be found in the [`sol
 
 ---
 
-## Disclaimer
-
-This project is intended for **educational and demonstration purposes only**. The intentional vulnerabilities present in this application should only be used in controlled environments for learning about web application security. **Never deploy this application in a production environment.**
